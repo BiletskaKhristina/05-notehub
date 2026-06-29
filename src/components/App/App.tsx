@@ -22,17 +22,12 @@ export default function App() {
     setPage(1);
   }, 500);
 
-  const { data, isLoading, isError, isFetching } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['notes', page, search],
     queryFn: () => fetchNotes(page, search),
-
-   
     placeholderData: (prev) => prev,
     staleTime: 10000,
   });
-
-
-  console.log('DATA:', data);
 
   const notes = data?.notes ?? [];
   const totalPages = data?.totalPages ?? 1;
@@ -43,19 +38,19 @@ export default function App() {
         <SearchBox onSearch={debouncedSearch} />
 
         {totalPages > 1 && (
-          <Pagination pageCount={totalPages} setPage={setPage} />
+          <Pagination
+            pageCount={totalPages}
+            currentPage={page}
+            onPageChange={setPage}
+          />
         )}
 
-        <button
-          className={css.button}
-          onClick={() => setIsModalOpen(true)}
-        >
+        <button className={css.button} onClick={() => setIsModalOpen(true)}>
           Create note +
         </button>
       </header>
 
-      {(isLoading || isFetching) && <p>Loading...</p>}
-
+      {isLoading && <p>Loading...</p>}
       {isError && <p>Error loading notes</p>}
 
       {!isLoading && notes.length === 0 ? (

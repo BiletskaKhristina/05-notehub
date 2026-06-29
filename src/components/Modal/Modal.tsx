@@ -1,6 +1,8 @@
-import { useEffect } from 'react';
-import type { ReactNode } from 'react';
+import { useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import type { ReactNode } from 'react';
+
+import css from './Modal.module.css';
 
 interface ModalProps {
   children: ReactNode;
@@ -9,19 +11,37 @@ interface ModalProps {
 
 export default function Modal({ children, onClose }: ModalProps) {
   useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
 
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  const handleEsc = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    },
+    [onClose]
+  );
+
+  useEffect(() => {
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [onClose]);
+  }, [handleEsc]);
+
+  const handleBackdrop = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
 
   return createPortal(
-    <div onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()}>
-        {children}
-      </div>
+    <div className={css.backdrop} onClick={handleBackdrop}>
+      <div className={css.modal}>{children}</div>
     </div>,
     document.body
   );
